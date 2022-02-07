@@ -356,18 +356,18 @@ HdaControllerExitBootServicesHandler (
   IN VOID       *Context
   )
 {
-  HDA_CONTROLLER_DEV *HdaControllerDev;
+  // HDA_CONTROLLER_DEV *HdaControllerDev;
 
-  HdaControllerDev = Context;
+  // HdaControllerDev = Context;
 
-  //
-  // Restore No Snoop Enable bit at Exit Boot Services to avoid breaking in-OS sound in Windows with some firmware.
-  // Note: Windows sound is fine even without this on many systems where AudioDxe disables No Snoop.
-  // REF: https://github.com/acidanthera/bugtracker/issues/1909
-  // REF: https://github.com/acidanthera/bugtracker/issues/740#issuecomment-998762564
-  // REF: Intel I/O Controller Hub 9 (ICH9) Family Datasheet (DEVC - Device Conrol Register/NSNPEN)
-  //
-  HdaControllerRestoreNoSnoopEn (HdaControllerDev);
+  // //
+  // // Restore No Snoop Enable bit at Exit Boot Services to avoid breaking in-OS sound in Windows with some firmware.
+  // // Note: Windows sound is fine even without this on many systems where AudioDxe disables No Snoop.
+  // // REF: https://github.com/acidanthera/bugtracker/issues/1909
+  // // REF: https://github.com/acidanthera/bugtracker/issues/740#issuecomment-998762564
+  // // REF: Intel I/O Controller Hub 9 (ICH9) Family Datasheet (DEVC - Device Conrol Register/NSNPEN)
+  // //
+  // HdaControllerRestoreNoSnoopEn (HdaControllerDev);
 }
 
 EFI_STATUS
