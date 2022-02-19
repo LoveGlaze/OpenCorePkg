@@ -35,7 +35,9 @@ jobs:
       run: |
         cd $BUILD_OUTPUT
           pyinstaller -F macrecovery.py
-          ls
+          cd dist
+            ls
+          cd -
         cd -
         ls
         pwd
