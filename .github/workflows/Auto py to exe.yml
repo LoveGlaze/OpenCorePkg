@@ -3,7 +3,7 @@ on:
   push:
     branches: master
 env:
-  BUILD_OUTPUT: 'Utilities/macrecovery'
+  BUILD_OUTPUT: 'OpenCorePkg/master/Utilities/macrecovery'
 jobs:
   Push-Release:
     runs-on: windows-latest
@@ -21,6 +21,8 @@ jobs:
         pip install pyinstaller
     - name: Pack Artifacts
       run: |
+        curl -OL https://github.com/acidanthera/OpenCorePkg/raw/master/Utilities/macrecovery/macrecovery.py
+        ls
         cd $BUILD_OUTPUT
           pyinstaller -F macrecovery.py
         cd -
