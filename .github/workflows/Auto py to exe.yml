@@ -3,7 +3,7 @@ on:
   push:
     branches: master
 env:
-  BUILD_OUTPUT: 'Hackintosh-LEGION-Y7000P-I7-9750H'
+  BUILD_OUTPUT: 'Utilities/macrecovery'
 jobs:
   Push-Release:
     runs-on: ubuntu-latest
@@ -23,7 +23,7 @@ jobs:
         else
           echo "OLD_PRE_TAG=$CUR_TAG" >> $GITHUB_ENV
         fi
-   - name: Set up Python
+    - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: 3.9
