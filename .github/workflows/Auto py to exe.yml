@@ -35,6 +35,8 @@ jobs:
       run: |
         cd $BUILD_OUTPUT
           pyinstaller -F macrecovery.py
+          ls
+          ls dist
         cd -
     - name: Generate Prerelease Release Notes
       run: |
@@ -57,7 +59,7 @@ jobs:
       with:
         prerelease: true
         bodyFile: ReleaseNotes.md
-        artifacts: "*.zip"
+        artifacts: "${{ env.BUILD_OUTPUT }}/dist/*.exe"
         tag: "v${{ env.OPENCORE_VER }}-alpha"
         token: ${{ secrets.GITHUB_TOKEN }}
 
