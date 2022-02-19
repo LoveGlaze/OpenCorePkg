@@ -11,11 +11,6 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: '5'
-    - name: Manage Version
-      run: |
-        git fetch --prune --unshallow --tags
-        CUR_TAG=git tag -l | grep 'alpha\|beta' | tail -1
-        echo "OPENCORE_VER=${CUR_TAG:1:3}" >> $GITHUB_ENV
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
