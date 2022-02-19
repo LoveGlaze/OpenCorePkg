@@ -57,6 +57,6 @@ jobs:
       with:
         prerelease: true
         bodyFile: ReleaseNotes.md
-        artifacts: "${{ env.BUILD_OUTPUT }}/*.exe"
+        artifacts: "${{ env.BUILD_OUTPUT }}/*/*/*.exe"
         tag: "v${{ env.OPENCORE_VER }}-alpha"
         token: ${{ secrets.GITHUB_TOKEN }}
