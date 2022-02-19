@@ -1,9 +1,9 @@
-name: Push Release
+name: Push exe To Release
 on: 
   push:
     branches: master
 env:
-  BUILD_OUTPUT: 'Hackintosh-LEGION-Y7000P-I7-9750H'
+  BUILD_OUTPUT: 'Utilities/macrecovery'
 jobs:
   Push-Release:
     runs-on: ubuntu-latest
@@ -25,7 +25,8 @@ jobs:
         fi
     - name: Pack Artifacts
       run: |
-        pyinstaller -F https://github.com/LoveGlaze/OpenCorePkg/blob/master/Utilities/macrecovery/macrecovery.py
+        cd $BUILD_OUTPUT
+        pyinstaller -F macrecovery.py
     - name: Generate Prerelease Release Notes
       run: |
         echo '### 免責聲明：:' >> ReleaseNotes.md
@@ -47,6 +48,6 @@ jobs:
       with:
         prerelease: true
         bodyFile: ReleaseNotes.md
-        artifacts: "*.exe"
+        artifacts: "$BUILD_OUTPUT/*.exe"
         tag: "v${{ env.OPENCORE_VER }}-alpha"
         token: ${{ secrets.GITHUB_TOKEN }}
