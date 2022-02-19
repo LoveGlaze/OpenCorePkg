@@ -23,6 +23,10 @@ jobs:
         else
           echo "OLD_PRE_TAG=$CUR_TAG" >> $GITHUB_ENV
         fi
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
     - name: Pack Artifacts
       run: |
         cd $BUILD_OUTPUT
