@@ -30,7 +30,8 @@ jobs:
     - name: Pack Artifacts
       run: |
         cd $BUILD_OUTPUT
-        pyinstaller -F macrecovery.py
+          pyinstaller -F macrecovery.py
+        cd -
     - name: Generate Prerelease Release Notes
       run: |
         echo '### 免責聲明：:' >> ReleaseNotes.md
@@ -52,6 +53,6 @@ jobs:
       with:
         prerelease: true
         bodyFile: ReleaseNotes.md
-        artifacts: "$BUILD_OUTPUT/*.exe"
+        artifacts: "${{ env.BUILD_OUTPUT }}/*.exe"
         tag: "v${{ env.OPENCORE_VER }}-alpha"
         token: ${{ secrets.GITHUB_TOKEN }}
