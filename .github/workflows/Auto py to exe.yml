@@ -52,6 +52,6 @@ jobs:
         prerelease: true
         bodyFile: ReleaseNotes.md
         artifacts: "${{ env.BUILD_OUTPUT }}/dist/*"
-        tag: "v${{ env.CUR_TAG"
+        tag: "${{ env.CUR_TAG }}"
         token: ${{ secrets.GITHUB_TOKEN }}
 
