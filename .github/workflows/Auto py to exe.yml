@@ -35,7 +35,7 @@ jobs:
       run: |
         cd $BUILD_OUTPUT
           pyinstaller -F macrecovery.py
-        cd ..
+        cd ../..
     - name: Generate Prerelease Release Notes
       run: |
         echo '### 免責聲明：:' >> ReleaseNotes.md
