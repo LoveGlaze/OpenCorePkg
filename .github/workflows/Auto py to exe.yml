@@ -37,8 +37,8 @@ jobs:
           pyinstaller -F macrecovery.py
           cd dist
             ls
-          cd -
-        cd -
+          cd ..
+        cd ../..
         ls
         pwd
     - name: Generate Prerelease Release Notes
