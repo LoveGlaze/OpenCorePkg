@@ -11,10 +11,6 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: '5'
-    - name: Manage Version
-      run: |
-        git fetch --prune --unshallow --tags
-        CUR_TAG="MacRecovery"
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
@@ -27,8 +23,6 @@ jobs:
       run: |
         cd $BUILD_OUTPUT
           pyinstaller -F macrecovery.py
-          ls
-          ls dist
         cd -
     - name: Generate Prerelease Release Notes
       run: |
@@ -37,11 +31,10 @@ jobs:
         echo '它尚未准备好供日常使用，我们不保证其可用性。' >> ReleaseNotes.md
         echo '如果您发现问题并且没有调试技能，请在打开问题之前提前与[QQ聊天室](https://qm.qq.com/cgi-bin/qm/qr?k=fnfunVaG-Z_occpl9QQDNaHB-B4S-ole&jump_from=webapi)联系。' >> ReleaseNotes.md
         echo '### 最新的五个更新是:' >> ReleaseNotes.md
-        git log -"5" --format="- %H %s" | sed '/^$/d' >> ReleaseNotes.md
     - name: Delete Old Prerelease
       uses: dev-drprasad/delete-tag-and-release@v0.2.0
       with:
-        tag_name: ${{ env.CUR_TAG }}
+        tag_name: 'MacRecovery'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -52,6 +45,6 @@ jobs:
         prerelease: true
         bodyFile: ReleaseNotes.md
         artifacts: "${{ env.BUILD_OUTPUT }}/dist/*"
-        tag: "${{ env.CUR_TAG }}"
+        tag: 'MacRecovery'
         token: ${{ secrets.GITHUB_TOKEN }}
 
