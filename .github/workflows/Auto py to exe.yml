@@ -22,8 +22,9 @@ jobs:
     - name: Pack Artifacts
       run: |
         pwd
-        cd $BUILD_OUTPUT
-         pwd
+        cd Utilities/macrecovery
+          pwd
+          pyinstaller -F macrecovery.py
         cd -
     - name: Generate Prerelease Release Notes
       run: |
