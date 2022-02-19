@@ -23,7 +23,7 @@ jobs:
       run: |
         pwd
         cd $BUILD_OUTPUT
-          pyinstaller -F macrecovery.py
+         pwd
         cd -
     - name: Generate Prerelease Release Notes
       run: |
