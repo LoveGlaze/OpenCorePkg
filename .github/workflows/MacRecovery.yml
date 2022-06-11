@@ -1,4 +1,4 @@
-name: Push exe To Releas
+name: MacRecovery
 on: 
   push:
     branches: master
