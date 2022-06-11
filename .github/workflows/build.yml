@@ -44,7 +44,11 @@ jobs:
 
       - run: ./build_duet.tool
       - run: ./build_oc.tool
-
+      - name: Generate Prerelease Release Notes
+        run: |
+          echo '### 免責聲明：:' >> ReleaseNotes.md
+          echo '***自动编译开发版OpenCore***' >> ReleaseNotes.md
+          echo '它尚未准备好供日常使用，我们不保证其可用性。' >> ReleaseNotes.md
       - name: Upload to Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -61,6 +65,7 @@ jobs:
         uses: ncipollo/release-action@v1.8.6
         with:
           prerelease: true
+          bodyFile: ReleaseNotes.md
           artifacts: "Binaries/*.zip"
           tag: "OpenCore"
           token: ${{ secrets.GITHUB_TOKEN }}
