@@ -50,6 +50,12 @@ jobs:
         with:
           name: macOS XCODE5 Artifacts
           path: Binaries/*.zip
+      - name: Delete Old Prerelease
+        uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          tag_name: 'OpenCore'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish GitHub Release
         if: contains(github.event.head_commit.message, 'Bump version') == false
         uses: ncipollo/release-action@v1.8.6
