@@ -37,7 +37,7 @@
   BaseRngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
   BcfgCommandLib|ShellPkg/Library/UefiShellBcfgCommandLib/UefiShellBcfgCommandLib.inf
   CpuLib|MdePkg/Library/BaseCpuLib/BaseCpuLib.inf
-  DebugLib|OpenCorePkg/Library/OcDebugLogLib/OcDebugLogLib.inf
+  DebugLib|OpenCorePkg/Library/OcDebugLibProtocol/OcDebugLibProtocol.inf
   DxeServicesLib|MdePkg/Library/DxeServicesLib/DxeServicesLib.inf
   MtrrLib|UefiCpuPkg/Library/MtrrLib/MtrrLib.inf
   DebugPrintErrorLevelLib|MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
@@ -93,6 +93,7 @@
   OcHeciLib|OpenCorePkg/Library/OcHeciLib/OcHeciLib.inf
   OcHiiDatabaseLocalLib|OpenCorePkg/Library/OcHiiDatabaseLib/OcHiiDatabaseLocalLib.inf
   OcInputLib|OpenCorePkg/Library/OcInputLib/OcInputLib.inf
+  OcLogAggregatorLib|OpenCorePkg/Library/OcLogAggregatorLib/OcLogAggregatorLib.inf
   OcMachoLib|OpenCorePkg/Library/OcMachoLib/OcMachoLib.inf
   OcMacInfoLib|OpenCorePkg/Library/OcMacInfoLib/OcMacInfoLib.inf
   OcMainLib|OpenCorePkg/Library/OcMainLib/OcMainLib.inf
@@ -140,6 +141,7 @@
   UefiLib|MdePkg/Library/UefiLib/UefiLib.inf
   UefiRuntimeServicesTableLib|MdePkg/Library/UefiRuntimeServicesTableLib/UefiRuntimeServicesTableLib.inf
   UefiUsbLib|MdePkg/Library/UefiUsbLib/UefiUsbLib.inf
+  VariablePolicyHelperLib|MdeModulePkg/Library/VariablePolicyHelperLib/VariablePolicyHelperLib.inf
   ResetSystemLib|OpenCorePkg/Library/OcResetSystemLib/OcResetSystemLib.inf
 
   !include NetworkPkg/NetworkLibs.dsc.inc
@@ -221,9 +223,9 @@
   OpenCorePkg/Library/OcCpuLib/OcCpuLib.inf
   OpenCorePkg/Library/OcCryptoLib/OcCryptoLib.inf
   OpenCorePkg/Library/OcDataHubLib/OcDataHubLib.inf
-  OpenCorePkg/Library/OcDebugSerialLib/OcDebugSerialLib.inf
-  OpenCorePkg/Library/OcDebugLogLib/OcDebugLogLib.inf
-  OpenCorePkg/Library/OcDebugNullLib/OcDebugNullLib.inf
+  OpenCorePkg/Library/OcDebugLibSerial/OcDebugLibSerial.inf
+  OpenCorePkg/Library/OcDebugLibProtocol/OcDebugLibProtocol.inf
+  OpenCorePkg/Library/OcDebugLibNull/OcDebugLibNull.inf
   OpenCorePkg/Library/OcDeviceMiscLib/OcDeviceMiscLib.inf
   OpenCorePkg/Library/OcDevicePathLib/OcDevicePathLib.inf
   OpenCorePkg/Library/OcDevicePropertyLib/OcDevicePropertyLib.inf
@@ -239,6 +241,7 @@
   OpenCorePkg/Library/OcHeciLib/OcHeciLib.inf
   OpenCorePkg/Library/OcHiiDatabaseLib/OcHiiDatabaseLocalLib.inf
   OpenCorePkg/Library/OcInputLib/OcInputLib.inf
+  OpenCorePkg/Library/OcLogAggregatorLib/OcLogAggregatorLib.inf
   OpenCorePkg/Library/OcMachoLib/OcMachoLib.inf
   OpenCorePkg/Library/OcMainLib/OcMainLib.inf
   OpenCorePkg/Library/OcMemoryLib/OcMemoryLib.inf
@@ -265,9 +268,12 @@
   OpenCorePkg/Platform/CrScreenshotDxe/CrScreenshotDxe.inf
   OpenCorePkg/Platform/OpenCanopy/OpenCanopy.inf
   OpenCorePkg/Platform/OpenLinuxBoot/OpenLinuxBoot.inf
+  OpenCorePkg/Platform/OpenNtfsDxe/OpenNtfsDxe.inf
   OpenCorePkg/Platform/OpenPartitionDxe/PartitionDxe.inf
   OpenCorePkg/Platform/OpenRuntime/OpenRuntime.inf
   OpenCorePkg/Platform/OpenUsbKbDxe/UsbKbDxe.inf
+  OpenCorePkg/Platform/ResetNvramEntry/ResetNvramEntry.inf
+  OpenCorePkg/Platform/ToggleSipEntry/ToggleSipEntry.inf
   OpenCorePkg/Staging/AudioDxe/AudioDxe.inf
   OpenCorePkg/Staging/OpenHfsPlus/OpenHfsPlus.inf
   OpenCorePkg/Tests/AcpiTest/AcpiTest.inf
@@ -322,6 +328,20 @@
   gEfiMdePkgTokenSpaceGuid.PcdFixedDebugPrintErrorLevel|0x80000042
 !endif
   gOpenCorePkgTokenSpaceGuid.PcdCanaryAllowRdtscFallback|TRUE
+
+[PcdsPatchableInModule]
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterAccessWidth|8
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio|FALSE
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseHardwareFlowControl|FALSE
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialDetectCable|FALSE
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0x03F8
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate|115200
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialLineControl|0x03
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialFifoControl|0x07
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialClockRate|1843200
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialPciDeviceInfo|{0xFF,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialExtendedTxFifoSize|64
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterStride|1
 
 [BuildOptions]
   # While there are no PCDs as of now, there at least are some custom macros.

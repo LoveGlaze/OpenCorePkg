@@ -64,6 +64,10 @@ ifeq ($(shell echo 'int a;' | "${CC}" -Wno-address -x c -c - -o /dev/null 2>&1),
 	CFLAGS += -Wno-address
 endif
 
+ifeq ($(shell echo 'int a;' | "${CC}" -Wno-stringop-overflow -x c -c - -o /dev/null 2>&1),)
+	CFLAGS += -Wno-stringop-overflow
+endif
+
 ifeq ($(DIST),Darwin)
 	ifneq ($(FUZZ),1)
 		CFLAGS  += -mmacosx-version-min=10.6 --target=x86_64-apple-darwin
@@ -93,16 +97,24 @@ ifeq ($(FUZZ_DIR),)
 endif
 
 ifeq ($(FUZZ_JOBS),)
-	FUZZ_JOBS = 4
+	FUZZ_JOBS = 2
+endif
+
+ifeq ($(FUZZ_SECURITY_JOBS),)
+	FUZZ_SECURITY_JOBS = 4
 endif
 
 ifeq ($(FUZZ_MEM),)
-	FUZZ_MEM = 6144
+	FUZZ_MEM = 8192
 endif
 
 ifeq ($(COVERAGE),1)
-	CFLAGS  += -fprofile-arcs -ftest-coverage -D COVERAGE_TEST
-	LDFLAGS += --coverage
+	CFLAGS  += --coverage -D COVERAGE_TEST
+	ifeq ($(DIST),Darwin)
+	  LDFLAGS += --coverage
+	else
+	  LDFLAGS += --coverage -Wl,-wrap,llvm_gcda_emit_arcs
+	endif
 endif
 
 ifeq ($(DEBUG),1)
@@ -174,7 +186,7 @@ ifneq ($(STANDALONE),1)
 	#
 	# OcCryptoLib targets.
 	#
-	OBJS    += RsaDigitalSign.o BigNumMontgomery.o BigNumPrimitives.o BigNumWordMul64.o Sha2.o SecureMem.o Sha512AvxDummy.o
+	OBJS    += RsaDigitalSign.o BigNumMontgomery.o BigNumPrimitives.o BigNumWordMul64.o Sha2.o SecureMem.o Sha512AccelDummy.o
 	#
 	# OcMachoLib targets.
 	#
@@ -223,7 +235,7 @@ ifneq ($(STANDALONE),1)
 				$(OC_USER)/Library/OcXmlLib:$\
 				$(OC_USER)/Library/OcStringLib:$\
 				$(OC_USER)/Library/OcCryptoLib:$\
-				$(OC_USER)/Library/OcCryptoLib/$(UDK_ARCH):$\
+				$(OC_USER)/Library/OcCryptoLib/Cpu32:$\
 				$(OC_USER)/Library/OcMachoLib:$\
 				$(OC_USER)/Library/OcAppleKeysLib:$\
 				$(OC_USER)/Library/OcCpuLib:$\
@@ -268,26 +280,20 @@ sydr-fuzz: $(PROJECT).sydr$(SUFFIX) $(PROJECT)$(SUFFIX) FORCE
 	@$(MKDIR) $(FUZZ_DIR)
 	@rm -rf sydr-fuzz-out
 	@cat <<- EOF > sydr-fuzz.toml
-	 	[sydr]
-		args = "--solving-timeout 60 -s 900 -j $(FUZZ_JOBS)"
+		[sydr]
+		args = "--solving-timeout 60 -s 900 -j $(FUZZ_JOBS) -m $(FUZZ_MEM)"
 		target = "$(PROJECT).sydr$(SUFFIX) @@"
-		jobs = 1
+		jobs = $(FUZZ_JOBS)
 
 		[libfuzzer]
 		path = "$(PROJECT)$(SUFFIX)"
 		args = "-jobs=$(FUZZ_JOBS) -workers=$(FUZZ_JOBS) -rss_limit_mb=$(FUZZ_MEM) $(FUZZ_DIR)"
+		merge = false
 	EOF
 	UBSAN_OPTIONS='halt_on_error=1' sydr-fuzz -l debug run -f
 
 sydr-fuzz-security: $(PROJECT).sydr$(SUFFIX) $(PROJECT)$(SUFFIX) FORCE
-	@cat <<- EOF > sydr-fuzz.toml
-	 	[sydr]
-		args = "--security --no-invert"
-		target = "$(PROJECT).sydr$(SUFFIX) @@"
-		corpus = "sydr-fuzz-out/corpus"
-		jobs = $(FUZZ_JOBS)
-	EOF
-	sydr-fuzz -l debug security
+	sydr-fuzz -l debug security --jobs $(FUZZ_SECURITY_JOBS)
 
 sydr-fuzz-import: $(PROJECT).sydr$(SUFFIX) $(PROJECT)$(SUFFIX) FORCE
 	@$(MKDIR) sydr-fuzz-out/corpus
@@ -295,16 +301,31 @@ sydr-fuzz-import: $(PROJECT).sydr$(SUFFIX) $(PROJECT)$(SUFFIX) FORCE
 	./$(PROJECT)$(SUFFIX) -merge=1 $(FUZZ_DIR) sydr-fuzz-out/corpus
 	./$(PROJECT)$(SUFFIX) -merge=1 $(FUZZ_DIR) sydr-fuzz-out/security
 
+sydr-import-check: $(PRODUCT) FORCE
+	@for f in $(FUZZ_DIR)/*; do  ./$(PRODUCT) $$f > /dev/null ; done || true
+	@for f in sydr-fuzz-out/corpus/*
+	do
+		if [ -n "$$(./$(PRODUCT) $$f | grep CoverageHit)" ]; then \
+				cp $$f $(FUZZ_DIR)/; \
+		fi
+	done || true
+	@for f in sydr-fuzz-out/security/*
+	do
+		if [ -n "$$(./$(PRODUCT) $$f | grep CoverageHit)" ]; then \
+				cp $$f $(FUZZ_DIR)/; \
+		fi
+	done || true
+
 coverage: $(PRODUCT) FORCE
 	@$(LCOV) --version
 	@rm -rf COVERAGE
 	@$(MKDIR) COVERAGE
 	$(LCOV) --no-checksum --zerocounters --directory .
 	$(LCOV) --no-checksum --capture --initial --directory . --output-file COVERAGE/trace.lcov_base
-	for f in $(FUZZ_DIR)/*; do  ./$(PRODUCT) $$f ; done || true
-	$(LCOV) --no-checksum --capture --directory . --rc lcov_branch_coverage=1  --rc lcov_excl_br_line='LCOV_EXCL_BR_LINE|ASSERT' --output-file COVERAGE/trace.lcov_info || exit 1
-	$(LCOV) --no-checksum -a COVERAGE/trace.lcov_base -a COVERAGE/trace.lcov_info --rc lcov_branch_coverage=1 --rc lcov_excl_br_line='LCOV_EXCL_BR_LINE|ASSERT' --output-file COVERAGE/trace.lcov_tmp || exit 1
-	$(LCOV) --no-checksum -r COVERAGE/trace.lcov_tmp /usr/include/\* --rc lcov_branch_coverage=1  --rc lcov_excl_br_line='LCOV_EXCL_BR_LINE|ASSERT' --output-file COVERAGE/trace.lcov_info_final || exit 1
+	for f in $(FUZZ_DIR)/*; do  ./$(PRODUCT) $$f > /dev/null ; done || true
+	$(LCOV) --no-checksum --capture --directory . --rc lcov_branch_coverage=1  --rc lcov_excl_br_line='LCOV_EXCL_BR_LINE|ASSERT|DEBUG' --output-file COVERAGE/trace.lcov_info || exit 1
+	$(LCOV) --no-checksum -a COVERAGE/trace.lcov_base -a COVERAGE/trace.lcov_info --rc lcov_branch_coverage=1 --rc lcov_excl_br_line='LCOV_EXCL_BR_LINE|ASSERT|DEBUG' --output-file COVERAGE/trace.lcov_tmp || exit 1
+	$(LCOV) --no-checksum -r COVERAGE/trace.lcov_tmp /usr/include/\* --rc lcov_branch_coverage=1  --rc lcov_excl_br_line='LCOV_EXCL_BR_LINE|ASSERT|DEBUG' --output-file COVERAGE/trace.lcov_info_final || exit 1
 	$(GENHTML) --branch-coverage --output-directory COVERAGE COVERAGE/trace.lcov_info_final
 
 clean: FORCE

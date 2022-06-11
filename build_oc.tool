@@ -1,5 +1,10 @@
 #!/bin/bash
 
+abort() {
+  echo "ERROR: $1!"
+  exit 1
+}
+
 buildutil() {
   UTILS=(
     "AppleEfiSignTool"
@@ -20,6 +25,7 @@ buildutil() {
     "TestKextInject"
     "TestMacho"
     "TestMp3"
+    "TestNtfsDxe"
     "TestPeCoff"
     "TestRsaPreprocess"
     "TestSmbios"
@@ -159,11 +165,14 @@ package() {
       "OpenCanopy.efi"
       "OpenHfsPlus.efi"
       "OpenLinuxBoot.efi"
+      "OpenNtfsDxe.efi"
       "OpenPartitionDxe.efi"
       "OpenRuntime.efi"
       "OpenUsbKbDxe.efi"
       "Ps2KeyboardDxe.efi"
       "Ps2MouseDxe.efi"
+      "ResetNvramEntry.efi"
+      "ToggleSipEntry.efi"
       "UsbMouseDxe.efi"
       "XhciDxe.efi"
       )
@@ -195,6 +204,7 @@ package() {
   utilScpts=(
     "LegacyBoot"
     "CreateVault"
+    "FindSerialPort"
     "macrecovery"
     "kpdescribe"
     "ShimToCert"
@@ -280,5 +290,19 @@ export NO_ARCHIVES
 
 src=$(curl -Lfs https://raw.githubusercontent.com/acidanthera/ocbuild/master/efibuild.sh) && eval "$src" || exit 1
 
+cd Utilities/ocvalidate || exit 1
+ocv_tool=""
+if [ -x ./ocvalidate ]; then
+  ocv_tool=./ocvalidate
+elif [ -x ./ocvalidate.exe ]; then
+  ocv_tool=./ocvalidate.exe
+fi
+
+if [ -x "$ocv_tool" ]; then
+  "$ocv_tool" ../../Docs/Sample.plist || abort "Wrong Sample.plist"
+  "$ocv_tool" ../../Docs/SampleCustom.plist || abort "Wrong SampleCustom.plist"
+fi
+cd ../..
+
 cd Library/OcConfigurationLib || exit 1
-./CheckSchema.py OcConfigurationLib.c || exit 1
+./CheckSchema.py OcConfigurationLib.c || abort "Wrong OcConfigurationLib.c"
