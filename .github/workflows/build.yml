@@ -58,7 +58,14 @@ jobs:
           file: Binaries/*.zip
           tag: ${{ github.ref }}
           file_glob: true
-
+      - name: Publish GitHub Release
+        if: contains(github.event.head_commit.message, 'Bump version') == false
+        uses: ncipollo/release-action@v1.8.6
+        with:
+          prerelease: true
+          artifacts: "Binaries/*.zip"
+          tag: "OpenCore-Alpha"
+          token: ${{ secrets.GITHUB_TOKEN }}
   build-linux-clangpdb-gcc5:
     name: Linux CLANGPDB/GCC5
     runs-on: ubuntu-latest
