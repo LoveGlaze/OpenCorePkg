@@ -200,7 +200,9 @@ typedef struct {
   //
   MACH_SECTION_ANY                       *PrelinkedInfoSection;
   //
-  // Pointer to PRELINK_TEXT_SEGMENT.
+  // Pointer to PRELINK_TEXT_SEGMENT (for prelinkedkernel, NULL for KC).
+  // As of macOS 13 Developer Beta 3, this segment may have corrupted
+  // information.
   //
   MACH_SEGMENT_COMMAND_ANY               *PrelinkedTextSegment;
   //
@@ -616,7 +618,7 @@ typedef enum {
 /**
   Kernel quirk patch function.
 
-  @param[in,out]  Patcher        A pointer to the patcher context.
+  @param[in,out]  Patcher        A pointer to the patcher context. Only optional for kext patching.
   @param[in]      KernelVersion  Kernel version to be matched.
 
   @return  EFI_SUCCESS when the patch is successfully applied.
@@ -624,7 +626,7 @@ typedef enum {
 typedef
 EFI_STATUS
 (KERNEL_QUIRK_PATCH_FUNCTION) (
-  IN OUT PATCHER_CONTEXT  *Patcher,
+  IN OUT PATCHER_CONTEXT  *Patcher OPTIONAL,
   IN     UINT32           KernelVersion
   );
 
@@ -646,7 +648,7 @@ typedef struct {
   Applies the specified quirk.
 
   @param[in]     Name           KERNEL_QUIRK_NAME specifying the quirk name.
-  @param[in,out] Patcher        PATCHER_CONTEXT instance.
+  @param[in,out] Patcher        PATCHER_CONTEXT instance. Only optional for kext patching.
   @param[in]     KernelVersion  Current kernel version.
 
   @returns EFI_SUCCESS on success.
@@ -654,7 +656,7 @@ typedef struct {
 EFI_STATUS
 KernelApplyQuirk (
   IN     KERNEL_QUIRK_NAME  Name,
-  IN OUT PATCHER_CONTEXT    *Patcher,
+  IN OUT PATCHER_CONTEXT    *Patcher OPTIONAL,
   IN     UINT32             KernelVersion
   );
 
@@ -866,6 +868,7 @@ PrelinkedReserveKextSize (
   @param[in,out] ExecutablePath  Kext executable path (e.g. Contents/MacOS/mykext), optional.
   @param[in,out] Executable      Kext executable, optional.
   @param[in]     ExecutableSize  Kext executable size, optional.
+  @param[out]    BundleVersion   Kext bundle version, optionally set on request.
 
   @return  EFI_SUCCESS on success.
 **/
@@ -878,7 +881,8 @@ PrelinkedInjectKext (
   IN     UINT32             InfoPlistSize,
   IN     CONST CHAR8        *ExecutablePath OPTIONAL,
   IN OUT CONST UINT8        *Executable OPTIONAL,
-  IN     UINT32             ExecutableSize OPTIONAL
+  IN     UINT32             ExecutableSize OPTIONAL,
+  OUT    CONST CHAR8        **BundleVersion OPTIONAL
   );
 
 /**
@@ -1002,16 +1006,18 @@ KcGetKextSize (
 /**
   Apply the delta from KC header to the file's offsets.
 
-  @param[in,out] Context  The context of the KEXT to rebase.
-  @param[in]     Delta    The offset from KC header the KEXT starts at.
+  @param[in]     PrelinkedContext  Prelinked context.
+  @param[in,out] Context           The context of the KEXT to rebase.
+  @param[in]     Delta             The offset from KC header the KEXT starts at.
 
   @retval EFI_SUCCESS  The file has beem rebased successfully.
   @retval other        An error has occured.
 **/
 EFI_STATUS
 KcKextApplyFileDelta (
-  IN OUT OC_MACHO_CONTEXT  *Context,
-  IN     UINT32            Delta
+  IN     PRELINKED_CONTEXT  *PrelinkedContext,
+  IN OUT OC_MACHO_CONTEXT   *Context,
+  IN     UINT32             Delta
   );
 
 /**
@@ -1253,6 +1259,7 @@ CachelessContextFree (
   @param[in]     InfoPlistSize   Kext Info.plist size.
   @param[in]     Executable      Kext executable, optional.
   @param[in]     ExecutableSize  Kext executable size, optional.
+  @param[out]    BundleVersion   Kext bundle version, optionally set on request.
 
   @return  EFI_SUCCESS on success.
 **/
@@ -1262,7 +1269,8 @@ CachelessContextAddKext (
   IN     CONST CHAR8        *InfoPlist,
   IN     UINT32             InfoPlistSize,
   IN     CONST UINT8        *Executable OPTIONAL,
-  IN     UINT32             ExecutableSize OPTIONAL
+  IN     UINT32             ExecutableSize OPTIONAL,
+  OUT    CONST CHAR8        **BundleVersion OPTIONAL
   );
 
 /**
@@ -1480,6 +1488,7 @@ MkextReserveKextSize (
   @param[in]     InfoPlistSize    Kext Info.plist size.
   @param[in,out] Executable       Kext executable, optional.
   @param[in]     ExecutableSize   Kext executable size, optional.
+  @param[out]    BundleVersion   Kext bundle version, optionally set on request.
 
   @return  EFI_SUCCESS on success.
 **/
@@ -1491,7 +1500,8 @@ MkextInjectKext (
   IN     CONST CHAR8    *InfoPlist,
   IN     UINT32         InfoPlistSize,
   IN     UINT8          *Executable OPTIONAL,
-  IN     UINT32         ExecutableSize OPTIONAL
+  IN     UINT32         ExecutableSize OPTIONAL,
+  OUT    CONST CHAR8    **BundleVersion OPTIONAL
   );
 
 /**
